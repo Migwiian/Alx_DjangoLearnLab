@@ -1,7 +1,7 @@
 from library_management import Book, Library
 
 def main():
-    # Setup a small library
+    #create a small library and add some books
     library = Library()
     library.add_book(Book("Brave New World", "Aldous Huxley"))
     library.add_book(Book("1984", "George Orwell"))
