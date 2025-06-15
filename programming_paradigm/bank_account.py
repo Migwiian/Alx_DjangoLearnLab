@@ -19,7 +19,7 @@ class BankAccount:
         return f"Current Balance: ${self.balance:.2f}"
 
 def main():
-    account = BankAccount("TEST001", 100.00)
+    account = BankAccount("ACC001", 100.00)
 
     print(account.display_balance())
 
