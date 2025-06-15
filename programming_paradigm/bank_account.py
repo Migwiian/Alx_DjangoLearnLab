@@ -19,27 +19,28 @@ class BankAccount:
         return f"Current Balance: ${self.balance:.2f}"
 
 def main():
-    account = BankAccount("ACC001", 100.00)
+    account = BankAccount("TEST001", 250.00)
 
     print(account.display_balance())
 
-    print(account.deposit(50.00))
+    print(account.withdraw(650.00))
     print(account.display_balance())
 
-    print(account.withdraw(30.00))
+    print(account.deposit(100.00))
     print(account.display_balance())
 
-    print(account.withdraw(200.00))
+    print(account.withdraw(50.00))
     print(account.display_balance())
 
-    print(account.deposit(-10.00))
+    print(account.deposit(-20.00))
     print(account.display_balance())
 
-    print(account.withdraw(-5.00))
+    print(account.withdraw(-10.00))
     print(account.display_balance())
 
     print(account.withdraw(account.balance))
     print(account.display_balance())
+
 
 if __name__ == "__main__":
     main()
