@@ -30,6 +30,6 @@ class Library:
     def add_book(self, book):
         self.books.append(book)
 
-    def display_books(self):
+    def list_books(self):
         for book in self.books:
             print(book)
