@@ -20,7 +20,7 @@ class PrintBook(Book):
         self.page_count = page_count
 
     def __str__(self):
-         return f"PrintBook: {self.title} by {self.author}, Page Count: {self.page_count}"
+        return f"PrintBook: {self.title} by {self.author}, Page Count: {self.page_count}"
 
 class Library:
     def __init__(self, name="Default_lib"):
@@ -29,8 +29,7 @@ class Library:
 
     def add_book(self, book):
         self.books.append(book)
-        print(f"'{book.title}' by {book.author} added to {self.name}.")
 
-    def list_books(self):
+    def display_books(self):
         for book in self.books:
-            print(f"- {book}")
+            print(book)
