@@ -11,7 +11,7 @@ if not Author.objects.exists():
 
 # 1. Query all books by a specific author
 author = :J.K. Rowling
-author = Author.objects.get(name="J.K. Rowling")
+author = Author.objects.get(name=author.name, objects.filter(author = author))  
 print(f"\n1. Books by {author.name}:")
 for book in author.books.all():
     print(f"- {book.title}")
@@ -25,5 +25,5 @@ for book in library.books.all():
 
 # 3. Retrieve the librarian for a library
 librarian = "Mr. Kinuthia"
-librarian = Librarian.objects.get(name=librarian, library=library)
+librarian = Librarian.objects.get(name=librarian_name, objects.filter(library=library))
 print(f"\n3. Librarian for {library.name}: {librarian.name}")
