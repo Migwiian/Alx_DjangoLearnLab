@@ -10,18 +10,16 @@ if not Author.objects.exists():
 author_name = "J.K. Rowling"
 author = Author.objects.get(name=author_name)
 print(f"\n1. Books by {author.name}:")
-for book in author.books.all():
+books = Book.objects.filter(author=author)
+for book in books:
     print(f"- {book.title}")
 
-_ = Book.objects.filter(author=author)
-
-library = Library.objects.first()
+library_name = "Central Library"
+library = Library.objects.get(name=library_name)
 print(f"\n2. Books in {library.name}:")
 for book in library.books.all():
     print(f"- {book.title}")
 
-print(f"\n3. Librarian details for {library.name}:")
-librarian = library.librarian
-print(f"- Name: {librarian.name}")
-print(f"- Library: {librarian.library.name}")
-print(f"- Books under care: {library.books.count()}")
+print(f"\n3. Librarian for {library.name}:")
+librarian = Librarian.objects.get(library=library)
+print(f"- {librarian.name}")
