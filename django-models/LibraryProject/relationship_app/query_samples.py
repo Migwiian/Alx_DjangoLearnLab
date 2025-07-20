@@ -1,29 +1,35 @@
 # relationship_app/query_samples.py
 from relationship_app.models import Author, Book, Library, Librarian
 
-# Create sample data if none exists
 if not Author.objects.exists():
     jk = Author.objects.create(name="J.K. Rowling")
     Book.objects.create(title="Harry Potter", author=jk)
-    lib = Library.objects.create(name="Central Library")
-    Librarian.objects.create(name="Mr. Kinuthia", library=lib)
-    lib.books.add(Book.objects.first())
+    
+    central_library = Library.objects.create(name="Central Library")
+    Librarian.objects.create(name="Mr. Kinuthia", library=central_library)
+    
+    harry_potter_book = Book.objects.get(title="Harry Potter")
+    central_library.books.add(harry_potter_book)
 
-# 1. Query all books by a specific author
-author = :J.K. Rowling
-author = Author.objects.get(name=author.name, objects.filter(author = author))  
-print(f"\n1. Books by {author.name}:")
-for book in author.books.all():
-    print(f"- {book.title}")
+print("\n1. Books by a specific author:")
+author_name_to_find = "J.K. Rowling"
+author_obj = Author.objects.get(name=author_name_to_find) 
+books_by_author = Book.objects.filter(author=author_obj) 
 
-# 2. List all books in a library
-library_name = "Central Library"
-library = Library.objects.get(name=library_name)
-print(f"\n2. Books in {library.name}:")
-for book in library.books.all():
-    print(f"- {book.title}")
+print(f"   Books by {author_obj.name}:")
+for book in books_by_author:
+    print(f"   - {book.title}")
 
-# 3. Retrieve the librarian for a library
-librarian = "Mr. Kinuthia"
-librarian = Librarian.objects.get(name=librarian_name, objects.filter(library=library))
-print(f"\n3. Librarian for {library.name}: {librarian.name}")
+print("\n2. Books in a library:")
+library_name_to_find = "Central Library"
+library_obj = Library.objects.get(name=library_name_to_find)
+print(f"   Books in {library_obj.name}:")
+for book in library_obj.books.all():
+    print(f"   - {book.title}")
+
+print("\n3. Retrieve the librarian for a library:")
+librarian_name_to_find = "Mr. Kinuthia" 
+library_for_librarian_query = Library.objects.get(name="Central Library") 
+librarian_obj = Librarian.objects.get(name=librarian_name_to_find, library=library_for_librarian_query)
+
+print(f"   Librarian for {library_for_librarian_query.name}: {librarian_obj.name}")
