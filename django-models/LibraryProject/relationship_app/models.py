@@ -2,7 +2,8 @@
 
 from django.db import models
 from django.contrib.auth.models import User
-
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 class Author(models.Model):
     name = models.CharField(max_length=100)
@@ -18,15 +19,15 @@ class Book(models.Model):
         return self.title
 
 class Library(models.Model):
-    name = models.CharField(max_length=200) # Ensure max_length is 200 as per previous
-    books = models.ManyToManyField(Book, related_name='libraries') # Keep related_name
+    name = models.CharField(max_length=200)
+    books = models.ManyToManyField(Book, related_name='libraries')
 
     def __str__(self):
         return self.name
 
 class Librarian(models.Model):
     name = models.CharField(max_length=100)
-    library = models.OneToOneField(Library, on_delete=models.CASCADE, related_name='librarian') # Keep OneToOneField and related_name
+    library = models.OneToOneField(Library, on_delete=models.CASCADE, related_name='librarian')
 
     def __str__(self):
         return self.name
@@ -42,3 +43,9 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.username}'s Profile ({self.role})"
+
+# Signal to auto-create UserProfile
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
