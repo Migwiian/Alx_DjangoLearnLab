@@ -1,30 +1,27 @@
-"""
-URL configuration for LibraryProject project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
+# LibraryProject/LibraryProject/urls.py
 
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import TemplateView
+from django.contrib.auth.views import LoginView # Make sure this is imported if you're using LoginView explicitly
 from bookshelf.views import SignUpView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+
+   
     path('accounts/', include('django.contrib.auth.urls')),
+
+    
+    path('accounts/login/', LoginView.as_view(template_name='login.html'), name='login'), # Corrected template name
+
+    #Custom profile page - Corrected template path
     path('accounts/profile/',
-         TemplateView.as_view(template_name='accounts/profile.html'),
+         TemplateView.as_view(template_name='profile.html'), # CORRECTED template name
          name='profile'),
+
+    #Custom signup page
     path("signup/", SignUpView.as_view(), name="signup"),
+
+    path('bookshelf/', include('bookshelf.urls')),
 ]
