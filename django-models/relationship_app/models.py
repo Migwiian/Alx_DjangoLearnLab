@@ -21,17 +21,12 @@ class Book(models.Model):
 class Library(models.Model):
     name = models.CharField(max_length=200)
     books = models.ManyToManyField(Book, related_name='libraries')
+    address = models.CharField(max_length=255, blank=True, null=True) # Added address as it's common for a library
 
     def __str__(self):
         return self.name
 
-class Librarian(models.Model):
-    name = models.CharField(max_length=100)
-    library = models.OneToOneField(Library, on_delete=models.CASCADE, related_name='librarian')
-
-    def __str__(self):
-        return self.name
-
+# UserProfile model
 class UserProfile(models.Model):
     ROLE_CHOICES = (
         ('Admin', 'Admin'),
@@ -44,8 +39,25 @@ class UserProfile(models.Model):
     def __str__(self):
         return f"{self.user.username}'s Profile ({self.role})"
 
-# Signal to auto-create profile
+
+class Librarian(models.Model):
+    # This links a Librarian entry directly to a UserProfile (and thus to a Django User)
+    user_profile = models.OneToOneField(UserProfile, on_delete=models.CASCADE, related_name='librarian_details')
+    # A librarian is assigned to a specific library
+    library = models.ForeignKey(Library, on_delete=models.SET_NULL, null=True, blank=True, related_name='librarians_assigned')
+    # You can add other fields here specific to a librarian, if needed later (e.g., employee_id, hiring_date)
+
+    def __str__(self):
+        return f"Librarian: {self.user_profile.user.username} ({self.library.name if self.library else 'No Library'})"
+
+# Signal to automatically create a UserProfile when a new User is created
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         UserProfile.objects.create(user=instance)
+
+# Signal to save the UserProfile
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    if hasattr(instance, 'userprofile'):
+        instance.userprofile.save()
