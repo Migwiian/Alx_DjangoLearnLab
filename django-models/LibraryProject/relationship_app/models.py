@@ -26,7 +26,7 @@ class Book(models.Model):
 
 class Library(models.Model):
     name = models.CharField(max_length=100)
-    books = models.ManyToManyField(Book) # Removed related_name for consistency with classmate
+    books = models.ManyToManyField(Book)
 
     def __str__(self):
         return self.name
@@ -45,15 +45,16 @@ class UserProfile(models.Model):
         ('Member', 'Member'),
     ]
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='Member') # Adjusted max_length and default casing
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='MEMBER')
 
     def __str__(self):
         return f"{self.user.username}'s Profile ({self.role})"
 
 @receiver(post_save, sender=User)
-def create_or_update_user_profile(sender, instance, created, **kwargs):
+def create_user_profile(sender, instance, created, **kwargs):
     if created:
         UserProfile.objects.create(user=instance)
-    elif hasattr(instance, 'userprofile'):
-        instance.userprofile.save()
 
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    instance.userprofile.save() 
