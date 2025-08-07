@@ -3,7 +3,6 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils.translation import gettext_lazy as _
 
 class CustomUserManager(BaseUserManager):
-    """Minimal custom user manager for learner project"""
     
     def create_user(self, username, email=None, password=None, **extra_fields):
         """Create and save a regular user"""
@@ -53,3 +52,11 @@ class Book(models.Model):
 
     def __str__(self):
         return f"{self.title} by {self.author} ({self.publication_year})"
+    
+    class Meta:
+        permissions  = [
+            ("can_view_book", "Can view book"),
+            ("can_edit_book", "Can edit book"),
+            ("can_delete_book", "Can delete book")
+        ]
+    
