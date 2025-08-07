@@ -1,10 +1,12 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import gettext_lazy as _
-from .models import Book, CustomUser 
+from .models import Book 
+from .models import CustomUser 
 
 # Custom User Admin
 @admin.register(CustomUser)
+admin.site.register(CustomUser, CustomUserAdmin)
 class CustomUserAdmin(UserAdmin):
     """Admin interface for CustomUser model"""
     list_display = ('username', 'email', 'date_of_birth', 'is_staff')
