@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import permission_required
 
 from .models import Book
 from .forms import BookForm
+from .forms import ExampleForm
 
 class SignUpView(CreateView):
     form_class = UserCreationForm

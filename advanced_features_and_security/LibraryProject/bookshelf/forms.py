@@ -11,3 +11,7 @@ class BookForm(forms.ModelForm):
     class Meta:
         model = Book
         fields = ['title', 'author', 'publication_date']
+
+class ExampleForm(forms.Form):
+    # You can add form fields here
+    name = forms.CharField(max_length=100)
