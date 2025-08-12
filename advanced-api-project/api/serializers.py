@@ -27,4 +27,6 @@ class Book(models.Model):
     def __str__(self):
         # We're telling the program that for every Book object,
         # it should be represented by its title.
-        return self.title
+        return self.titlefrom django.db import models
+
+# Create your models here.
