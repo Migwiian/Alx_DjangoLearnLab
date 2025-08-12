@@ -15,7 +15,7 @@ class Book(models.Model):
     # This model represents a book.
     title = models.CharField(max_length=200)
     # This field stores the year the book was published.
-    published_year = models.IntegerField()
+    publication_year = models.IntegerField()
     # This is a ForeignKey, linking each book to a specific Author.
     # The 'related_name' 'books' allows us to easily access
     # all books written by an author from the Author object.
