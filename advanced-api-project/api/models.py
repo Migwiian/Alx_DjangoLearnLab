@@ -22,7 +22,6 @@ class Book(models.Model):
     # The 'on_delete=models.CASCADE' means if an Author is deleted,
     # all of their books will also be deleted.
     author = models.ForeignKey(Author, related_name='books', on_delete=models.CASCADE)
-    
 
     def __str__(self):
         # We're telling the program that for every Book object,
