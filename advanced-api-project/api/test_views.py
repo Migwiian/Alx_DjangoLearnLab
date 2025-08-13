@@ -1,115 +1,167 @@
-# api/test_views.py
-
-from rest_framework import status
 from rest_framework.test import APITestCase
-from django.contrib.auth import get_user_model
-from .models import Author, Book
-
-User = get_user_model()
+from rest_framework import status
+from django.contrib.auth.models import User
+from api.models import Author, Book
 
 class BookAPITest(APITestCase):
     """
-    We are telling the program to create a new test case for the Book API.
-    This class will contain all the tests for our Book-related endpoints.
+    Comprehensive test suite for Book API endpoints.
+    Tests cover CRUD operations, authentication requirements, search, and ordering.
+    Uses Django's login system for authentication testing as required by ALX.
     """
+
     def setUp(self):
         """
-        We are setting up the initial data for our tests.
-        This runs before every single test method in this class.
+        Initialize test data that will be used across all test cases.
+        Runs before each test method execution.
         """
-        self.user = User.objects.create_user(username='testuser', password='password123')
+        # Create test user with credentials for authentication tests
+        self.user = User.objects.create_user(
+            username='testuser',
+            password='testpassword'  # Plaintext password for test login
+        )
+        
+        # Create test author and book as sample data
         self.author = Author.objects.create(name="J.K. Rowling")
-        self.book1 = Book.objects.create(title="Harry Potter and the Philosopher's Stone", author=self.author, publication_year=1997)
-        self.book2 = Book.objects.create(title="Fantastic Beasts and Where to Find Them", author=self.author, publication_year=2001)
-
-    # --- Test CRUD Operations (Read-only) ---
+        self.book = Book.objects.create(
+            title="Harry Potter and the Sorcerer's Stone",
+            author=self.author,
+            publication_year=1997
+        )
+        
+        # Define API endpoints
+        self.list_create_url = '/api/books/'  # List and create endpoint
+        self.detail_url = f'/api/books/{self.book.pk}/'  # Detail view endpoint
 
     def test_list_books_unauthenticated(self):
         """
-        We are testing that an unauthenticated user can view the list of books.
+        Verify unauthenticated users can access the book listing.
+        Should return HTTP 200 and all books.
         """
-        response = self.client.get('/api/books/')
+        response = self.client.get(self.list_create_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # We are telling the program to check that the response contains our two test books.
-        self.assertEqual(len(response.data), 2)
+        self.assertEqual(len(response.data), 1)  # Should see our test book
 
     def test_retrieve_book_unauthenticated(self):
         """
-        We are testing that an unauthenticated user can view a single book.
+        Verify unauthenticated users can view individual book details.
+        Should return HTTP 200 with correct book data.
         """
-        response = self.client.get(f'/api/books/{self.book1.id}/')
+        response = self.client.get(self.detail_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # We are telling the program to check that the title of the returned book is correct.
-        self.assertEqual(response.data['title'], self.book1.title)
-
-    def test_create_book_unauthenticated_fails(self):
-        """
-        We are testing that an unauthenticated user cannot create a book.
-        Because the permissions are IsAuthenticatedOrReadOnly, a POST request should be denied.
-        """
-        data = {'title': 'New Book', 'author': self.author.id, 'publication_year': 2023}
-        response = self.client.post('/api/books/', data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(Book.objects.count(), 2) # We are telling the program to check that no new book was created.
-
-    # --- Test CRUD Operations (Authenticated) ---
+        self.assertEqual(response.data['title'], self.book.title)
 
     def test_create_book_authenticated(self):
         """
-        We are testing that an authenticated user can create a new book.
+        Verify authenticated users can create new books.
+        Uses Django's login() instead of force_authenticate() for proper auth testing.
         """
-        self.client.force_authenticate(user=self.user)
-        data = {'title': 'The Lord of the Rings', 'author': self.author.id, 'publication_year': 1954}
-        response = self.client.post('/api/books/', data, format='json')
+        new_book_data = {
+            'title': 'The Hobbit',
+            'author': self.author.pk,
+            'publication_year': 1937
+        }
+        
+        # Authenticate using Django's login system (required by ALX)
+        login_success = self.client.login(username='testuser', password='testpassword')
+        self.assertTrue(login_success)  # Verify login worked
+        
+        response = self.client.post(self.list_create_url, new_book_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Book.objects.count(), 3) # We are telling the program that a new book was successfully created.
+        self.assertEqual(Book.objects.count(), 2)  # Original + new book
+        
+        self.client.logout()  # Clean up authentication
+
+    def test_create_book_unauthenticated_fails(self):
+        """
+        Verify unauthenticated users cannot create books.
+        Should return HTTP 403 Forbidden.
+        """
+        new_book_data = {
+            'title': 'The Hobbit',
+            'author': self.author.pk,
+            'publication_year': 1937
+        }
+        
+        response = self.client.post(self.list_create_url, new_book_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(Book.objects.count(), 1)  # No new book created
 
     def test_update_book_authenticated(self):
         """
-        We are testing that an authenticated user can update a book.
+        Verify authenticated users can update existing books.
+        Uses the non-standard update endpoint with PUT method.
         """
-        self.client.force_authenticate(user=self.user)
-        data = {'title': 'Harry Potter and the Sorcerer\'s Stone'}
-        response = self.client.patch(f'/api/books/{self.book1.id}/', data, format='json')
+        updated_data = {
+            'pk': self.book.pk,
+            'title': 'Harry Potter and the Philosopher\'s Stone',
+            'author': self.author.pk,
+            'publication_year': 1997
+        }
+        
+        # Authenticate properly with login()
+        self.client.login(username='testuser', password='testpassword')
+        
+        response = self.client.put('/api/books/update/', updated_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.book1.refresh_from_db() # We are telling the program to reload the book data from the database.
-        self.assertEqual(self.book1.title, 'Harry Potter and the Sorcerer\'s Stone')
+        
+        # Verify the book was actually updated
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.title, updated_data['title'])
+        
+        self.client.logout()
 
     def test_delete_book_authenticated(self):
         """
-        We are testing that an authenticated user can delete a book.
+        Verify authenticated users can delete books.
+        Uses the non-standard delete endpoint with DELETE method.
         """
-        self.client.force_authenticate(user=self.user)
-        response = self.client.delete(f'/api/books/{self.book1.id}/')
+        delete_data = {'pk': self.book.pk}
+        
+        # Authenticate with login() as required
+        self.client.login(username='testuser', password='testpassword')
+        
+        response = self.client.delete('/api/books/delete/', delete_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        # We are telling the program to check that the book is no longer in the database.
-        self.assertEqual(Book.objects.count(), 1)
-
-    # --- Test Filtering, Searching, and Ordering ---
+        self.assertEqual(Book.objects.count(), 0)  # Book should be deleted
+        
+        self.client.logout()
 
     def test_search_books_by_title(self):
         """
-        We are testing the search functionality on the 'title' field.
+        Verify the search functionality filters books by title.
         """
-        response = self.client.get('/api/books/?search=Philosopher')
+        response = self.client.get(self.list_create_url, {'search': 'Harry'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['title'], self.book1.title)
+        self.assertEqual(response.data[0]['title'], self.book.title)
 
     def test_search_books_by_author_name(self):
         """
-        We are testing the search functionality on the 'author__name' field.
+        Verify the search functionality filters books by author name.
         """
-        response = self.client.get('/api/books/?search=Rowling')
+        response = self.client.get(self.list_create_url, {'search': 'Rowling'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
+        self.assertEqual(len(response.data), 1)
 
     def test_order_books_by_publication_year(self):
         """
-        We are testing the ordering functionality on the 'publication_year' field.
+        Verify the ordering functionality works by publication year.
         """
-        response = self.client.get('/api/books/?ordering=publication_year')
+        # Add a second book for ordering tests
+        Book.objects.create(
+            title="Fantastic Beasts and Where to Find Them",
+            author=self.author,
+            publication_year=2001
+        )
+        
+        # Test descending order
+        response = self.client.get(self.list_create_url, {'ordering': '-publication_year'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # We are telling the program to check if the first book is the oldest one.
-        self.assertEqual(response.data[0]['title'], self.book1.title) 
-        self.assertEqual(response.data[1]['title'], self.book2.title)
+        
+        # Verify order is correct
+        titles = [book['title'] for book in response.data]
+        self.assertEqual(titles, [
+            "Fantastic Beasts and Where to Find Them",
+            "Harry Potter and the Sorcerer's Stone"
+        ])
