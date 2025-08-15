@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <h2>Welcome, {{ user.username }}!</h2>
+    
+    <div class="profile-info">
+        <p><strong>Email:</strong> {{ user.email }}</p>
+        <a href="{% url 'logout' %}" class="btn btn-logout">Logout</a>
+    </div>
+    
+    <!-- Show user's posts if available -->
+    {% if posts %}
+        <h3>Your Blog Posts</h3>
+        <ul class="post-list">
+            {% for post in posts %}
+                <li>
+                    <a href="{% url 'post_detail' post.id %}">{{ post.title }}</a>
+                    <span class="post-date">{{ post.published_date|date:"M d, Y" }}</span>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>You haven't written any posts yet. <a href="{% url 'create_post' %}">Create one?</a></p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends 'base.html' %}  <!-- Use the coloring book -->
+
+{% block title %}Login{% endblock %}  <!-- Change the title tab -->
+
+{% block content %}  <!-- Start drawing in the blank space -->
+<div class="auth-container">
+    <h2>Login</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}  <!-- Django renders the form -->
+        <button type="submit" class="btn">Login</button>
+    </form>
+</div>
+{% endblock %}  <!-- Stop drawing -->
