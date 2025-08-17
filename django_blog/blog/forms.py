@@ -19,7 +19,7 @@ class CustomUserCreationForm(UserCreationForm):
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
-        fields = ['title', 'content']
+        fields = ['title', 'content', 'tags']  # Include tags if using taggit
 class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
