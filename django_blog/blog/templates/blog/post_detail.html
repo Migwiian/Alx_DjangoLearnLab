@@ -9,4 +9,28 @@
         <a href="{% url 'post_edit' pk=post.pk %}" class="btn">Edit Post</a>
         <a href="{% url 'post_delete' pk=post.pk %}" class="btn">Delete Post</a>
     {% endif %}
+
+    <hr>
+
+    <h3>Comments</h3>
+    {% for comment in comments %}
+        <p>{{ comment.content }}</p>
+        <small>by {{ comment.author }} on {{ comment.published_date }}</small>
+        {% if request.user == comment.author %}
+            <a href="{% url 'comment_update' pk=comment.pk %}">Edit</a>
+            <a href="{% url 'comment_delete' pk=comment.pk %}">Delete</a>
+        {% endif %}
+        <hr>
+    {% empty %}
+        <p>No comments yet.</p>
+    {% endfor %}
+
+    <h4>Add a Comment</h4>
+    {% if user.is_authenticated %}
+        <form method="post">
+            {% csrf_token %} {{ form.as_p }} <button type="submit">Submit Comment</button>
+        </form>
+    {% else %}
+        <p>Please log in to leave a comment.</p>
+    {% endif %}
 {% endblock content %}
