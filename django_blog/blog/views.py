@@ -45,30 +45,7 @@ class ListPostsView(ListView):
 
 class PostDetailView(View):
     model = Post  # No need for get_context_data - author is accessible via post.author in template
-    def get(self, request, pk):
-        post = Post.objects.get(pk=pk)
-        comments = post.comments.all()
-        comment_form = CommentForm()
-        return render(request, 'post_detail.html', {
-            'post': post,
-            'comments': comments,
-            'comment_form': comment_form
-        })
-    def post(self, request, pk):
-        post = Post.objects.get(pk=pk)
-        comment_form = CommentForm(request.POST)
-        if comment_form.is_valid():
-            comment = comment_form.save(commit=False)
-            comment.post = post
-            comment.author = request.user
-            comment.save()
-            return redirect('post_detail', pk=pk)
-        comments = post.comments.all()
-        return render(request, 'post_detail.html', {
-            'post': post,
-            'comments': comments,
-            'comment_form': comment_form
-        })
+    
 
 class CreatePostView(LoginRequiredMixin, CreateView):
     model = Post
@@ -97,6 +74,19 @@ class DeletePostView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def test_func(self):
         return self.request.user == self.get_object().author
+    
+class CommentCreateView(LoginRequiredMixin, CreateView):
+    model = Comment
+    form_class = CommentForm
+    template_name = 'comment_form.html'
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        form.instance.post_id = self.kwargs['post_id']  # Assuming post_id is passed in the URL
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return self.object.post.get_absolute_url()  # Redirect to the post detail page after creating comment
     
 class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Comment
