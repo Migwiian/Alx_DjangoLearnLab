@@ -28,3 +28,13 @@ class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
         fields = ['content']
+
+class SearchForm(forms.Form):
+    q = forms.CharField(
+        label='Search',
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Search posts...',
+            'class': 'form-control'
+        }),
+        required=False
+    )

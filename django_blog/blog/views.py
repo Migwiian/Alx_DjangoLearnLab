@@ -6,6 +6,8 @@ from .models import Post, Comment
 from django.contrib.auth.decorators import login_required
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.views import View
+from django.db.models import Q
+
 # Create your views here.
 def register(request):
     if request.method == 'POST':
@@ -105,3 +107,21 @@ class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def test_func(self):
         return self.request.user == self.get_object().author
+
+class PostSearchView(ListView):
+    model = Post
+    template_name = 'blog/post_search.html'
+    context_object_name = 'search_results'
+    paginate_by = 10
+
+    def get_queryset(self):
+        query = self.request.GET.get('q')
+        if query:
+            # Search in title, content, and tags
+            return Post.objects.filter(
+                Qeturn Post.objects.filter(
+                Q(title__icontains=query) |  
+                Q(content__icontains=query) |  
+                Q(tags__name__icontains=query) 
+            ).distinct()
+        return Post.objects.none()
