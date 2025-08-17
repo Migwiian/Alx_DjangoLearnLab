@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.views import View
 from django.db.models import Q
+from taggit.models import Tag
 
 # Create your views here.
 def register(request):
@@ -125,3 +126,22 @@ class PostSearchView(ListView):
                 Q(tags__name__icontains=query) 
             ).distinct()
         return Post.objects.none()
+class PostByTagListView(ListView):
+    """
+    View to show all posts with a specific tag
+    URL: /tags/<slug:tag_slug>/
+    """
+    model = Post
+    template_name = 'blog/posts_by_tag.html'
+    context_object_name = 'posts'  # Used in template
+    paginate_by = 10  # Optional pagination
+
+    def get_queryset(self):
+        # Get posts filtered by tag slug
+        return Post.objects.filter(tags__slug=self.kwargs['tag_slug'])
+    
+    def get_context_data(self, **kwargs):
+        # Add the tag object to template context
+        context = super().get_context_data(**kwargs)
+        context['tag'] = Tag.objects.get(slug=self.kwargs['tag_slug'])
+        return context
