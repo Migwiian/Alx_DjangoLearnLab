@@ -1,10 +1,11 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
-from .forms import CustomUserCreationForm
-from .models import Post
+from .forms import CustomUserCreationForm, CommentForm, PostForm
+from .models import Post, Comment
 from django.contrib.auth.decorators import login_required
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views import View
 # Create your views here.
 def register(request):
     if request.method == 'POST':
@@ -14,7 +15,7 @@ def register(request):
             login(request, user)
             return redirect('home')
     else:
-        form = Cu@stomUserCreationForm()
+        form = CustomUserCreationForm()
     return render(request, 'register.html', {'form': form})
 def login_view(request):
     if request.method == 'POST':
@@ -42,8 +43,32 @@ class ListPostsView(ListView):
     context_object_name = 'posts'
     ordering = ['-published_date']  # Simpler than overriding get_queryset
 
-class PostDetailView(DetailView):
+class PostDetailView(View):
     model = Post  # No need for get_context_data - author is accessible via post.author in template
+    def get(self, request, pk):
+        post = Post.objects.get(pk=pk)
+        comments = post.comments.all()
+        comment_form = CommentForm()
+        return render(request, 'post_detail.html', {
+            'post': post,
+            'comments': comments,
+            'comment_form': comment_form
+        })
+    def post(self, request, pk):
+        post = Post.objects.get(pk=pk)
+        comment_form = CommentForm(request.POST)
+        if comment_form.is_valid():
+            comment = comment_form.save(commit=False)
+            comment.post = post
+            comment.author = request.user
+            comment.save()
+            return redirect('post_detail', pk=pk)
+        comments = post.comments.all()
+        return render(request, 'post_detail.html', {
+            'post': post,
+            'comments': comments,
+            'comment_form': comment_form
+        })
 
 class CreatePostView(LoginRequiredMixin, CreateView):
     model = Post
@@ -59,7 +84,8 @@ class UpdatePostView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Post
     fields = ['title', 'content']
     template_name = 'post_form.html'
-    success_url = '/'
+    def get_success_url(self):
+        return self.object.get_absolute_url() # Assuming you have a get_absolute_url method in your Post model
 
     def test_func(self):
         return self.request.user == self.get_object().author
@@ -72,3 +98,20 @@ class DeletePostView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     def test_func(self):
         return self.request.user == self.get_object().author
     
+class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Comment
+    fields = ['content']
+    template_name = 'comment_form.html'
+
+    def get_success_url(self):
+        return self.object.post.get_absolute_url()  # Redirect to the post detail page after updating comment
+
+    def test_func(self):
+        return self.request.user == self.get_object().author    
+class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Comment
+    template_name = 'comment_confirm_delete.html'
+    success_url = '/'
+
+    def test_func(self):
+        return self.request.user == self.get_object().author
