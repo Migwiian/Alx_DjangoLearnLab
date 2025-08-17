@@ -1,10 +1,10 @@
-from django.shortcuts import render
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from .forms import CustomUserCreationForm
 from .models import Post
 from django.contrib.auth.decorators import login_required
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 # Create your views here.
 def register(request):
     if request.method == 'POST':
@@ -34,3 +34,41 @@ def logout_view(request):
 def profile(request):
     user_posts = Post.objects.filter(author=request.user)
     return render(request, 'profile.html', {'user': request.user, 'posts': user_posts})
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+
+class ListPostsView(ListView):
+    model = Post
+    template_name = 'post_list.html'
+    context_object_name = 'posts'
+    ordering = ['-published_date']  # Simpler than overriding get_queryset
+
+class PostDetailView(DetailView):
+    model = Post  # No need for get_context_data - author is accessible via post.author in template
+
+class CreatePostView(LoginRequiredMixin, CreateView):
+    model = Post
+    fields = ['title', 'content']
+    template_name = 'post_form.html'
+    success_url = '/'  # Consider using reverse_lazy('post_list')
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        return super().form_valid(form)
+
+class UpdatePostView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Post
+    fields = ['title', 'content']
+    template_name = 'post_form.html'
+    success_url = '/'
+
+    def test_func(self):
+        return self.request.user == self.get_object().author
+
+class DeletePostView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Post
+    template_name = 'post_confirm_delete.html'
+    success_url = '/'
+
+    def test_func(self):
+        return self.request.user == self.get_object().author
+    
