@@ -1,14 +1,12 @@
 from django.shortcuts import render
-from rest_framework import status
+from rest_framework import status, generics, permissions
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from .serializers import UserRegistrationSerializer, UserLoginSerializer
-from rest_framework import generics
 
 
 # Create your views here.
@@ -39,8 +37,8 @@ def login_user(request):
 
 class FollowUserView(generics.CreateAPIView):
     authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
-    queryset = CustomUser.objects.all()
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = get_user_model().objects.all()
 
     def create(self, request, *args, **kwargs):
         username = kwargs.get('username')
@@ -57,8 +55,8 @@ class FollowUserView(generics.CreateAPIView):
         }, status=status.HTTP_200_OK)
 class UnfollowUserView(generics.DestroyAPIView):
     authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
-    queryset = CustomUser.objects.all()
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = get_user_model().objects.all()
 
     def destroy(self, request, *args, **kwargs):
         username = kwargs.get('username')
