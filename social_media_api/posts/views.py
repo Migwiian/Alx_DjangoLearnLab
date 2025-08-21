@@ -72,13 +72,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 @authentication_classes([TokenAuthentication])
 @permission_classes([permissions.IsAuthenticated])
 def get_feed(request):
-    """
-    Return posts authored by users the current user follows, ordered by newest first.
-    """
-    following_relation = getattr(request.user, 'following', None)
-    if following_relation is not None:
-        posts = Post.objects.filter(author__in=following_relation.all()).order_by('-created_at')
-    else:
-        posts = Post.objects.none()
+    following_users = request.user.following.all()
+    posts = Post.objects.filter(author__in=following_users).order_by('-created_at')
     serializer = PostSerializer(posts, many=True)
     return Response(serializer.data)
