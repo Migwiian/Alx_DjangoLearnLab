@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
-from django.contrib.auth import get_user_model
+from .models import CustomUser
 from django.shortcuts import get_object_or_404
 from .serializers import UserRegistrationSerializer, UserLoginSerializer
 
@@ -35,17 +35,17 @@ def login_user(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class FollowUserView(generics.CreateAPIView):
+class FollowUserView(generics.GenericAPIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
-    queryset = get_user_model().objects.all()
+    queryset = CustomUser.objects.all()
 
-    def create(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         username = kwargs.get('username')
         if request.user.username == username:
             return Response({"detail": "You cannot follow yourself."}, status=status.HTTP_400_BAD_REQUEST)
 
-        target_user = get_object_or_404(get_user_model(), username=username)
+        target_user = get_object_or_404(CustomUser, username=username)
         request.user.following.add(target_user)
 
         return Response({
@@ -53,17 +53,17 @@ class FollowUserView(generics.CreateAPIView):
             "following_count": request.user.following.count(),
             "followers_count": target_user.followers.count(),
         }, status=status.HTTP_200_OK)
-class UnfollowUserView(generics.DestroyAPIView):
+class UnfollowUserView(generics.GenericAPIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
-    queryset = get_user_model().objects.all()
+    queryset = CustomUser.objects.all()
 
     def destroy(self, request, *args, **kwargs):
         username = kwargs.get('username')
         if request.user.username == username:
             return Response({"detail": "You cannot unfollow yourself."}, status=status.HTTP_400_BAD_REQUEST)
 
-        target_user = get_object_or_404(get_user_model(), username=username)
+        target_user = get_object_or_404(CustomUser, username=username)
         request.user.following.remove(target_user)
 
         return Response({
