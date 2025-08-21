@@ -1,5 +1,8 @@
 from django.shortcuts import render
 from rest_framework import viewsets, permissions, pagination
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.response import Response
 from .models import Post, Comment
 from .serializers import PostSerializer, CommentSerializer
 from rest_framework.filters import SearchFilter
@@ -63,3 +66,19 @@ class CommentViewSet(viewsets.ModelViewSet):
         when a new comment is created.
         """
         serializer.save(author=self.request.user)
+
+
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([permissions.IsAuthenticated])
+def get_feed(request):
+    """
+    Return posts authored by users the current user follows, ordered by newest first.
+    """
+    following_relation = getattr(request.user, 'following', None)
+    if following_relation is not None:
+        posts = Post.objects.filter(author__in=following_relation.all()).order_by('-created_at')
+    else:
+        posts = Post.objects.none()
+    serializer = PostSerializer(posts, many=True)
+    return Response(serializer.data)
