@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from rest_framework import viewsets, permissions, pagination
+from rest_framework import generics, viewsets, permissions, pagination
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.response import Response
@@ -91,7 +91,7 @@ def like_post(request, post_id):
             {"detail": "You have already liked this post."},
             status=status.HTTP_400_BAD_REQUEST
         )
-    like = Like.objects.create(user=request.user, post=post)
+    like = Like.objects.get_or_create(user=request.user, post=post)[0] #
     if request.user != post.author:
         Notification.objects.create(
             recipient=post.author,
@@ -110,10 +110,10 @@ def unlike_post(request, post_id):
     Remove a like from a specific post.
     """
     # Get the post object or return 404
-    post = get_object_or_404(Post, id=post_id)
+    post = generics.get_object_or_404(Post, id=post_id)
     
     # Try to get the like object
-    like = get_object_or_404(Like, user=request.user, post=post)
+    like = generics.get_object_or_404(Like, user=request.user, post=post)
     
     # Delete the like
     like.delete()
