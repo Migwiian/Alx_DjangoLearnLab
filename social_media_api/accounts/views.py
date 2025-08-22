@@ -7,6 +7,7 @@ from rest_framework.authentication import TokenAuthentication
 from .models import CustomUser
 from django.shortcuts import get_object_or_404
 from .serializers import UserRegistrationSerializer, UserLoginSerializer
+from notifications.models import Notification
 
 
 # Create your views here.
@@ -47,12 +48,19 @@ class FollowUserView(generics.GenericAPIView):
 
         target_user = get_object_or_404(CustomUser, username=username)
         request.user.following.add(target_user)
-
+        Notification.objects.create(
+            recipient=target_user,
+            actor=request.user,
+            verb='started following you',
+            target=None  # No specific target for follow action
+        )
         return Response({
             "message": f"You are now following {target_user.username}.",
             "following_count": request.user.following.count(),
             "followers_count": target_user.followers.count(),
         }, status=status.HTTP_200_OK)
+
+
 class UnfollowUserView(generics.GenericAPIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]

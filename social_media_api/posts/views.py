@@ -3,9 +3,10 @@ from rest_framework import viewsets, permissions, pagination
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.response import Response
-from .models import Post, Comment
+from .models import Post, Comment, Like
 from .serializers import PostSerializer, CommentSerializer
 from rest_framework.filters import SearchFilter
+from notifications.models import Notification
 
 
 class PostCommentPagination(pagination.PageNumberPagination):
@@ -76,3 +77,48 @@ def get_feed(request):
     posts = Post.objects.filter(author__in=following_users).order_by('-created_at')
     serializer = PostSerializer(posts, many=True)
     return Response(serializer.data)
+
+@api_view(['POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([permissions.IsAuthenticated])
+def like_post(request, post_id):
+    """
+    Endpoint to like a post.
+    """
+    post = get_object_or_404(Post, id=post_id)
+    if Like.objects.filter(user=request.user, post=post).exists():
+        return Response(
+            {"detail": "You have already liked this post."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    like = Like.objects.create(user=request.user, post=post)
+    if request.user != post.author:
+        Notification.objects.create(
+            recipient=post.author,
+            actor=request.user,
+            verb='liked your post',
+            target=post
+        )
+    serializer = LikeSerializer(like)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+@api_view(['POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([permissions.IsAuthenticated])
+def unlike_post(request, post_id):
+    """
+    Remove a like from a specific post.
+    """
+    # Get the post object or return 404
+    post = get_object_or_404(Post, id=post_id)
+    
+    # Try to get the like object
+    like = get_object_or_404(Like, user=request.user, post=post)
+    
+    # Delete the like
+    like.delete()
+    
+    return Response(
+        {"detail": "Post unliked successfully."},
+        status=status.HTTP_200_OK
+    )
