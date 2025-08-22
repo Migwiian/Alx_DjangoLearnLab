@@ -110,7 +110,7 @@ def unlike_post(request, post_id):
     Remove a like from a specific post.
     """
     # Get the post object or return 404
-    post = generics.get_object_or_404(Post, id=post_id)
+    post = generics.get_object_or_404(Post, pk=pk)
     
     # Try to get the like object
     like = generics.get_object_or_404(Like, user=request.user, post=post)
